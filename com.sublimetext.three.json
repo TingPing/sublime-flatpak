@@ -1,0 +1,108 @@
+{
+    "app-id": "com.sublimetext.three",
+    "runtime": "org.freedesktop.Sdk",
+    "runtime-version": "1.6",
+    "sdk": "org.freedesktop.Sdk",
+    "branch": "stable",
+    "command": "sublime",
+    "separate-locales": false,
+    "finish-args": [
+        "--share=ipc", "--socket=x11",
+        "--share=network",
+        "--talk-name=org.gnome.SettingsDaemon",
+        "--filesystem=host",
+        "--env=NPM_CONFIG_GLOBALCONFIG=/app/etc/npmrc",
+        "--extra-data=sublime.tar.bz2:9ce120c4f28b239d3b3860ee672d9d87e1397a4c08ee6c4e62fd6e261a296519:9857381::https://download.sublimetext.com/sublime_text_3_build_3143_x64.tar.bz2",
+        "--extra-data=Package Control.sublime-package:6f4c264a24d933ce70df5dedcf1dcaeeebe013ee18cced0ef93d5f746d80ef60:286331::https://packagecontrol.io/Package%20Control.sublime-package"
+    ],
+    "modules": [
+        {
+            "name": "gtk2",
+            "cleanup": [
+                "/bin",
+                "/share/gtk-2.0",
+                "/share/aclocal",
+                "/share/gtk-doc",
+                "/lib/pkgconfig",
+                "/include",
+                "*.la"
+            ],
+            "config-opts": [
+                "--disable-gtk-doc",
+                "--disable-introspection",
+                "--disable-man",
+                "--disable-static",
+                "--with-xinput=xfree"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://download.gnome.org/sources/gtk+/2.24/gtk+-2.24.30.tar.xz",
+                    "sha256": "0d15cec3b6d55c60eac205b1f3ba81a1ed4eadd9d0f8e7c508bc7065d0c4ca50"
+                }
+            ]
+        },
+        {
+            "name": "nodejs",
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://nodejs.org/dist/v6.11.3/node-v6.11.3.tar.gz",
+                    "sha256": "c60562a7bc316f137297b7aa23ae354e3ac6779fe8ddf46fe43a75b6b92443e8"
+                }
+            ]
+        },
+        {
+            "name": "gnome-themes-standard",
+            "config-opts": ["--disable-gtk3-engine"],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://download.gnome.org/sources/gnome-themes-standard/3.20/gnome-themes-standard-3.20.tar.xz",
+                    "sha256": "1cde84b34da310e6f2d403bfdbe9abb0798e5f07a1d1b4fde82af8e97edd3bdc"
+                }
+            ]
+        },
+        {
+            "name": "sublime",
+            "buildsystem": "simple",
+            "build-commands": [
+                "install -D apply_extra /app/bin/apply_extra",
+                "install sublime /app/bin",
+                "install -m644 npmrc /app/etc"
+            ],
+            "sources" : [
+                {
+                    "type": "script",
+                    "dest-filename": "apply_extra",
+                    "commands": [
+                      "tar -xf sublime.tar.bz2; mv sublime_text_3/* .",
+
+                      "install -Dm644 sublime_text.desktop export/share/applications/com.sublimetext.three.desktop",
+                      "sed -i 's:Icon=sublime-text:Icon=com.sublimetext.three:' export/share/applications/com.sublimetext.three.desktop",
+                      "sed -i 's:Exec=/opt/sublime_text/sublime_text:Exec=sublime:' export/share/applications/com.sublimetext.three.desktop",
+
+                      "for icon_size in 16 32 48 128 256; do",
+                      "    install -Dm644 Icon/${icon_size}x${icon_size}/sublime-text.png export/share/icons/hicolor/${icon_size}x${icon_size}/apps/com.sublimetext.three.png",
+                      "done",
+
+                      "install -m644 'Package Control.sublime-package' Packages",
+
+                      "rm -r sublime_text.desktop sublime.tar.bz2 sublime_text_3 Icon 'Package Control.sublime-package'"
+                    ]
+                },
+                {
+                    "type": "script",
+                    "dest-filename": "sublime",
+                    "commands": [
+                        "exec env PATH=\"$PATH:$XDG_DATA_HOME/node_modules/bin\" /app/extra/sublime_text \"$@\""
+                    ]
+                },
+                {
+                    "type": "file",
+                    "path": "npmrc"
+                }
+            ]
+        }
+    ]
+}
